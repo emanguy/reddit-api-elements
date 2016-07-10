@@ -1,0 +1,176 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-location/iron-query-params.html">
+
+<script>
+Polymer({
+
+	is: 'reddit-api',
+
+	properties: 
+	{
+		/** The client ID of your Reddit Application */
+		clientId:
+		{
+			type: String
+		},
+		/** The redirect URI for a page which just closes and keeps the returned token in the URL, do not URL encode this. */
+		redirectUri:
+		{
+			type: String
+		},
+		/** The scopes your app requires. See https://github.com/reddit/reddit/wiki/OAuth2#authorization-implicit-grant-flow for more information */
+		scope:
+		{
+			type: Array,
+			value: () => { return []; }
+		},
+		/** A JSON object with the decoded form data described at https://github.com/reddit/reddit/wiki/OAuth2#token-retrieval-implicit-grant-flow */
+		authInfo:
+		{
+			type: Object?,
+			notifies: true,
+			readOnly: true,
+			value: () => { return {}; }
+		},
+		_parser:
+		{
+			type: Object,
+			readOnly: true,
+			value: () => { return document.createElement("iron-query-params"); }
+		}
+	},
+
+	authenticateWithUser: function()
+	{
+		// Create necessary vars
+		var state = "" + Math.random();
+		var theParser = this._parser;
+		var setFunc = this._setAuthInfo;
+		var fire = this.fire;
+
+		// Create a promise to be returned
+		var promise = new Promise((resolve, reject) =>
+				{
+					// Generate new async HTTP request
+					var url = "https://www.reddit.com/api/v1/authorize?client_id=" + encodeURIComponent(clientId) + 
+									"&response_type=token&state=" + encodeURIComponent(state) + "redirect_uri=" + encodeURIComponent(this.redirectUri) +
+									"&scope=" + this._spaceSeparatedScopes();
+					var xhr = new XMLHttpRequest();
+					
+					// Add event listener for XHR loading
+					xhr.onreadystatechange = () =>
+					{
+						// Run this code when we fully load the webpage
+						if (xhr.readyState === 4)
+						{
+							// Attempt to authenticate in new window if we can reach the endpoint
+							if (xhr.status === 200)
+							{
+								var theWindow = window.open(url);
+
+								// Check every half second to see if window is closed
+								var interval = window.setInterval(() =>
+										{
+											// When the window is closed attempt to grab the auth data as JSON
+											if (theWindow.closed)
+											{
+												window.clearInterval(interval);
+												var hash = theWindow.location.hash;
+
+												// If no hash then something went wrong
+												if (hash === "")
+												{
+													fire("authError", {status: 204, reason: "Empty response"});
+													reject({status: 204, reason: "Empty response"});
+												}
+
+												// If there is a hash form-decode it
+												hash = hash.substring(1, hash.length);
+												theParser.paramsString = hash;
+												
+												// Resolve if we sent this request, otherwise reject with error
+												if (state === theParser.paramsString.state)
+												{
+													setFunc(theParser.paramsObject);
+													resolve({status: 200, response: theParser.paramsObject});
+												}
+												else
+												{
+													fire("authError", {status: 404, reason: "Got response from a request you didn't send"});
+													reject({status: 404, reason: "Got response from a request you didn't send"});
+												}
+											}
+										}, 500);
+							}
+							else // Reject and fire error if we can't reach auth endpoint or we 403 based on bad client-id/redirect-uri
+							{
+								fire("authError", {status: xhr.status, reason: "Bad client-id or redirect-uri"});
+								reject({status: xhr.status, reason: "Bad client-id or redirect-uri"});
+							}
+						}
+					}	
+
+					// Launch the request
+					xhr.open("GET", url, true);
+					xhr.send();
+				});
+
+		return promise;
+	},
+
+	anonymousLogin: function()
+	{
+		var postData = "grant_type=https://oauth.reddit.com/grants/installed_client&device_id=DO_NOT_TRACK_THIS_DEVICE"
+		var tokenUrl = "https://www.reddit.com/api/v1/access_token";
+		var fire = this.fire;
+		var setFunc = this._setAuthInfo;
+
+		// Create a new promise to return to the caller
+		var promise = new Promise((resolve, reject) =>
+				{
+					var xhr = new XMLHttpRequest();
+
+					// Check to see if the request completed
+					xhr.onreadystatechange = () =>
+					{
+						if (xhr.readyState == 4)
+						{
+							// Check the status, reject if not 200 OK
+							if (xhr.status == 200)
+							{
+								var returnedJSON = JSON.parse(xhr.responseText);
+
+								setFunc(returnedJSON);
+								resolve({status: 200, response: returnedJSON});
+							}
+							else
+							{
+								fire("authError", {status: xhr.status, reason: "Internal reddit-api-auth element error"});
+								reject({status: xhr.status, reason: "Internal reddit-api-auth element error"});
+							}
+						}
+					}
+
+					xhr.setRequstHeader("Authorization", "Basic " + btoa(clientId + ":"));
+					xhr.open("POST", tokenUrl, true);
+					xhr.send(postData);
+				});
+
+		return promise;
+	},
+
+	_spaceSeparatedScopes: function()
+	{
+		var str = this.scope[0];
+		var index = 1;
+
+		for (index; index < this.scope.length; index++)
+		{
+			str = str + "%20" + encodeURIComponent( this.scope[index] );
+		}
+
+		return str;
+	}
+
+});
+</script>
