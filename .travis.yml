@@ -3,19 +3,12 @@ node_js: stable
 dist: trusty
 sudo: required
 addons:
-  firefox: latest
   sauce_connect: true
-  apt:
-    sources:
-    - google-chrome
-    packages:
-    - google-chrome-stable
 before_script:
 - npm install -g bower web-component-tester
 - bower install
 script:
 - xvfb-run wct
-- if [ "${TRAVIS_PULL_REQUEST}" = "false"  ]; then wct -s 'default'; fi
 env:
   global:
   - secure: p5eak1bvVPKJz67+2SEa0PM8LCk0Hegb4CR/M+VvtSxnHYNiP7Sc/f4wd7mvVfwd3rVJ8ppK7PDwyoUYmnmUmC2rj1d5ty6cWzd0AxGKaMqr58nVNPYeFWP77Caq9XzkzZYK2ZSgnmsoJhqR73D59o/FwE3fjojyCe9nUwaaEthpF1h4MoLGCQT6aXi9NLaoq4Gtb7QbgMsis3XpespIar1yfIDb7iu2PjSX+EKx3F1Cqc7bQ4+HOXe1vwRHM2/lWB7BcbthOhxrQOyAIOMXsQGj33Tj4XrXHEtcA+pZXE0pp3JRUE/X0sHi0qi4KUgwPhAfqB/6t7T7PKwWWW4+ywlRIk0DwlFVf6vwnXYvmVyuU2Ushsgsp43EY4IPrlynOxiguTU5EuEytpwMjvKJ1VRub71bm3dOWAzBDZ4iR6hEReQjj+e/8a/3KIRRoGhtW+PVMvgzUxazbDiqAMEV9ZfxDbx/GnIpwrcO3xptjZLrROyjZHK4ezd3w5QxJTbiQz3LEPbLRuSBZAH47eu+/YbeYqHgdkxDnLTtt3RBIO8wYOfvHvrKdjLshTM8c6I+5+SUZI7vZRcFaIUXcD1aU1aLDl6LdzjUHLjAUR1qNw46nvSw7CMg8UbftvzOumQ+9HCoQimCMrcqiyy9Btr8NSavxNv8cZbdhZPabjWopdo=
