@@ -4,7 +4,7 @@
 <script>
 Polymer({
 
-	is: 'reddit-api',
+	is: 'reddit-api-auth',
 
 	properties: 
 	{
@@ -27,7 +27,7 @@ Polymer({
 		/** A JSON object with the decoded form data described at https://github.com/reddit/reddit/wiki/OAuth2#token-retrieval-implicit-grant-flow */
 		authInfo:
 		{
-			type: Object?,
+			type: Object,
 			notifies: true,
 			readOnly: true,
 			value: () => { return {}; }
@@ -39,6 +39,7 @@ Polymer({
 			value: () => { return document.createElement("iron-query-params"); }
 		}
 	},
+
 
 	authenticateWithUser: function()
 	{
@@ -120,10 +121,12 @@ Polymer({
 
 	anonymousLogin: function()
 	{
-		var postData = "grant_type=https://oauth.reddit.com/grants/installed_client&device_id=DO_NOT_TRACK_THIS_DEVICE"
+		var postData = new FormData();
 		var tokenUrl = "https://www.reddit.com/api/v1/access_token";
-		var fire = this.fire;
-		var setFunc = this._setAuthInfo;
+		var instance = this;
+
+		postData.append("grant_type", "https://oauth.reddit.com/grants/installed_client");
+		postData.append("device_id", "DO_NOT_TRACK_THIS_DEVICE");
 
 		// Create a new promise to return to the caller
 		var promise = new Promise((resolve, reject) =>
@@ -135,24 +138,29 @@ Polymer({
 					{
 						if (xhr.readyState == 4)
 						{
-							// Check the status, reject if not 200 OK
-							if (xhr.status == 200)
-							{
-								var returnedJSON = JSON.parse(xhr.responseText);
+							// Check the status, reject if not 200 OK 
+							if (xhr.status == 200) { var returnedJSON = JSON.parse(xhr.responseText);
 
-								setFunc(returnedJSON);
+								if (returnedJSON.error)
+								{
+									instance.fire("authError", {status: 200, reason: returnedJSON.error});
+									reject({status: 200, reason: returnedJSON.error});
+									return;
+								}
+
+								instance._setAuthInfo(returnedJSON);
 								resolve({status: 200, response: returnedJSON});
 							}
 							else
 							{
-								fire("authError", {status: xhr.status, reason: "Internal reddit-api-auth element error"});
+								instance.fire("authError", {status: xhr.status, reason: "Internal reddit-api-auth element error"});
 								reject({status: xhr.status, reason: "Internal reddit-api-auth element error"});
 							}
 						}
 					}
 
-					xhr.setRequstHeader("Authorization", "Basic " + btoa(clientId + ":"));
 					xhr.open("POST", tokenUrl, true);
+					xhr.setRequestHeader("Authorization", "Basic " + btoa(instance.clientId + ":"));
 					xhr.send(postData);
 				});
 
@@ -170,6 +178,11 @@ Polymer({
 		}
 
 		return str;
+	},
+
+	_setAuth: function(authInfo)
+	{
+		this._setAuthInfo(authInfo);
 	}
 
 });

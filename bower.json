@@ -1,7 +1,6 @@
 {
   "name": "reddit-api",
   "description": "An element set for interacting with the Reddit API.",
-  "main": "reddit-api.html",
   "dependencies": {
     "polymer": "Polymer/polymer#^1.4.0"
   },
