@@ -1,4 +1,5 @@
 # \<reddit-api\>
+[![Build Status](https://travis-ci.org/emanguy/reddit-api-elements.svg?branch=master)](https://travis-ci.org/emanguy/reddit-api-elements)
 
 An element set for interacting with the Reddit API.
 
