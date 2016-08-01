@@ -5,8 +5,8 @@
     <title>reddit-api test</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
-    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="../../web-component-tester/browser.js"></script>
+    <script src="../../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../../web-component-tester/browser.js"></script>
 
     <link rel="import" href="../reddit-api-auth.html">
   </head>
@@ -32,7 +32,9 @@
 
 			element.anonymousLogin().then(function(result) {
 				expect(result).to.be.an("object");
-				expect(result.status).to.be.equal(200);
+				expect(result).to.contain.all.keys(["status", "authInfo"]);
+				expect(result.status).to.be.a("number").and.equal(200);
+				expect(result.authInfo).to.be.an("object");
 
 				expect(element.authInfo).to.be.an("object");
 				expect(element.authInfo).to.not.have.property("error");
@@ -44,7 +46,7 @@
 				done();
 			},
 			function(result) {
-				expect(result).to.be.an("object");
+				expect(result).to.be.an("object").and.contain.all.keys(["status", "reason"]);
 				throw result;
 				done();
 			}).catch(done);

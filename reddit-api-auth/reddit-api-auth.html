@@ -1,5 +1,5 @@
-<link rel="import" href="../polymer/polymer.html">
-<link rel="import" href="../iron-location/iron-query-params.html">
+<link rel="import" href="../../polymer/polymer.html">
+<link rel="import" href="../../iron-location/iron-query-params.html">
 
 <script>
 Polymer({
@@ -18,6 +18,12 @@ Polymer({
 		{
 			type: String
 		},
+		/** If true, the element will automatically perform user-less auth when stamped to the DOM. */
+		autoAuthorize:
+		{
+			type: Boolean,
+			value: false
+		},
 		/** The scopes your app requires. See https://github.com/reddit/reddit/wiki/OAuth2#authorization-implicit-grant-flow for more information */
 		scope:
 		{
@@ -30,6 +36,7 @@ Polymer({
 			type: Object,
 			notifies: true,
 			readOnly: true,
+			reflectToAttribute: true,
 			value: () => { return {}; }
 		},
 		_parser:
@@ -40,13 +47,19 @@ Polymer({
 		}
 	},
 
+	ready: function()
+	{
+		if (this.autoAuthorize)
+		{
+			this.anonymousLogin();
+		}
+	},
 
 	authenticateWithUser: function()
 	{
 		// Create necessary vars
 		var state = "" + Math.random();
-		var theParser = this._parser;
-		var setFunc = this._setAuthInfo;
+		var instance = this;
 		var fire = this.fire;
 
 		// Create a promise to be returned
@@ -81,23 +94,23 @@ Polymer({
 												// If no hash then something went wrong
 												if (hash === "")
 												{
-													fire("authError", {status: 204, reason: "Empty response"});
+													instance.fire("authError", {status: 204, reason: "Empty response"});
 													reject({status: 204, reason: "Empty response"});
 												}
 
 												// If there is a hash form-decode it
 												hash = hash.substring(1, hash.length);
-												theParser.paramsString = hash;
+												instance._parser.paramsString = hash;
 												
 												// Resolve if we sent this request, otherwise reject with error
-												if (state === theParser.paramsString.state)
+												if (state === instance._parser.paramsString.state)
 												{
-													setFunc(theParser.paramsObject);
-													resolve({status: 200, response: theParser.paramsObject});
+													instance._setAuthInfo(instance._parser.paramsObject);
+													resolve({status: 200, authInfo: instance._parser.paramsObject});
 												}
 												else
 												{
-													fire("authError", {status: 404, reason: "Got response from a request you didn't send"});
+													instance.fire("authError", {status: 404, reason: "Got response from a request you didn't send"});
 													reject({status: 404, reason: "Got response from a request you didn't send"});
 												}
 											}
@@ -105,7 +118,7 @@ Polymer({
 							}
 							else // Reject and fire error if we can't reach auth endpoint or we 403 based on bad client-id/redirect-uri
 							{
-								fire("authError", {status: xhr.status, reason: "Bad client-id or redirect-uri"});
+								instance.fire("authError", {status: xhr.status, reason: "Bad client-id or redirect-uri"});
 								reject({status: xhr.status, reason: "Bad client-id or redirect-uri"});
 							}
 						}
@@ -119,6 +132,12 @@ Polymer({
 		return promise;
 	},
 
+	/**
+	  * Log in anonymously. Promise resolves and gives Reddit response status as well as an authInfo copy
+	  * while a reject will give Reddit response status and a reason for auth failure.
+	  *
+	  * @return {promise} {status: number, authInfo: object} on resolve, {status: number, reason: string} on reject
+	  */
 	anonymousLogin: function()
 	{
 		var postData = new FormData();
@@ -149,7 +168,14 @@ Polymer({
 								}
 
 								instance._setAuthInfo(returnedJSON);
-								resolve({status: 200, response: returnedJSON});
+
+								var keys = Object.keys(instance.authInfo);
+								for (i in Object.keys(instance.authInfo))
+								{
+									instance.notifyPath("authInfo." + keys[i], returnedJSON[keys[i]]);
+								}
+
+								resolve({status: 200, authInfo: returnedJSON});
 							}
 							else
 							{

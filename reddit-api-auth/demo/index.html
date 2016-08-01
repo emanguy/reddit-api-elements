@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+  <head>
+    <title>reddit-api demo</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+    <script src="../../../webcomponentsjs/webcomponents-lite.js"></script>
+	<link rel="import" href="../../../polymer/polymer.html">
+
+    <link rel="import" href="../../../iron-demo-helpers/demo-pages-shared-styles.html">
+    <link rel="import" href="../../../iron-demo-helpers/demo-snippet.html">
+
+    <link rel="import" href="../reddit-api-auth.html">
+
+    <style is="custom-style" include="demo-pages-shared-styles">
+    </style>
+  </head>
+  <body>
+
+	<div class="vertical-section-container centered">
+		<h3>&lt;reddit-api-auth&gt; Demo</h3>
+		<demo-snippet>
+			<template>
+				<template is="dom-bind">
+					<reddit-api-auth client-id="5StAVdoKcV-gug" 
+						auth-info="{{info}}" 
+						auto-authorize></reddit-api-auth>
+					<span>Retrieved access token: {{info.access_token}}</span>
+				</template>
+			</template>
+		</demo-snippet>
+	</div>
+
+  </body>
+</html>
