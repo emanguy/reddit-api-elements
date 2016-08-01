@@ -2,6 +2,12 @@
 <link rel="import" href="../../iron-location/iron-query-params.html">
 
 <script>
+/**
+  * Assists with authentication to reddit, simply provide your Reddit app client ID
+  * and this element should do the rest. Also provides for other reddit-api elements.
+  * 
+  * @demo reddit-api-auth/demo/index.html
+  */
 Polymer({
 
 	is: 'reddit-api-auth',
@@ -204,12 +210,14 @@ Polymer({
 		}
 
 		return str;
-	},
-
-	_setAuth: function(authInfo)
-	{
-		this._setAuthInfo(authInfo);
 	}
 
+   /**
+	 * Fired on authentication errors.
+	 *
+	 * @event auth-error
+	 * @param {number} status The HTTP response status from Reddit
+	 * @param {string} reason Plaintext of why the auth error occurred.
+	 */
 });
 </script>
