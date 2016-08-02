@@ -112,7 +112,7 @@ Polymer({
 								instance._parser.paramsString = hash;
 								
 								// Resolve if we sent this request, otherwise reject with error
-								if (state === instance._parser.paramsObject.state)
+								if (state === instance._parser.paramsObject.state && !instance._parser.paramsObject.error)
 								{
 									var responseJSON = instance._parser.paramsObject;
 									var keys = Object.keys(responseJSON);
@@ -124,6 +124,13 @@ Polymer({
 									}
 
 									resolve({status: 200, authInfo: responseJSON});
+									return;
+								}
+								else if (instance._parser.paramsObject.error)
+								{
+									instance.fire("auth-error", {status: 403, reason: "User denied access."});
+									reject({status: 403, reason: "User denied access."});
+									return;
 								}
 								else
 								{

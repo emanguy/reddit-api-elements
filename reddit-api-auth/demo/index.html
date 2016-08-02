@@ -41,7 +41,7 @@
 				 <br>
 				 <span>Retrieved access token: {{info.access_token}}</span>
 				 <br>
-				 <span hidden="{{!authErrorOccurred}}">Authentication error occurred.</span>
+				 <span hidden="{{!authErrorOccurred}}">Authentication error occurred. Error: {{errorMessage}}</span>
 			</template>
 
 			<script>
@@ -60,6 +60,12 @@
 						{
 							type: Boolean,
 							value: false
+						},
+
+						errorMessage:
+						{
+							type: String,
+							value: ""
 						}	
 					},
 
@@ -73,9 +79,10 @@
 						this.$.authenticate.authenticateWithUser();
 					},
 
-					_triggerAuthError: function()
+					_triggerAuthError: function(e)
 					{
 						this.authErrorOccurred = true;
+						this.errorMessage = e.detail.reason;
 					}
 				});
 			</script>
