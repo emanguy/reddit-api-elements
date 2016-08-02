@@ -1,0 +1,24 @@
+{
+  "name": "reddit-api-elements",
+  "description": "An element set for interacting with the Reddit API.",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.4.0"
+  },
+  "devDependencies": {
+    "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
+    "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^1.0.0",
+    "web-component-tester": "^4.0.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^0.7.0"
+  },
+  "homepage": "https://github.com/emanguy/reddit-api-elements",
+  "_release": "002503ad19",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "002503ad1930fa19cede46ca31d304186135d121"
+  },
+  "_source": "git://github.com/emanguy/reddit-api-elements.git",
+  "_target": "master",
+  "_originalSource": "emanguy/reddit-api-elements",
+  "_direct": true
+}

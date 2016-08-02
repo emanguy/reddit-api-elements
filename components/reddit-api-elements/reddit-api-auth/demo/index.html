@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+  <head>
+    <title>reddit-api demo</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+    <script src="../../../webcomponentsjs/webcomponents-lite.js"></script>
+	<link rel="import" href="../../../polymer/polymer.html">
+
+    <link rel="import" href="../../../iron-demo-helpers/demo-pages-shared-styles.html">
+    <link rel="import" href="../../../iron-demo-helpers/demo-snippet.html">
+
+    <link rel="import" href="../reddit-api-auth.html">
+
+    <style is="custom-style" include="demo-pages-shared-styles">
+    </style>
+  </head>
+  <body>
+
+	<div class="vertical-section-container centered">
+		<h3>&lt;reddit-api-auth&gt; Demo</h3>
+		<demo-snippet>
+			<template>
+				<template is="dom-bind">
+					<reddit-api-auth client-id="5StAVdoKcV-gug" 
+						auth-info="{{info}}" 
+						auto-authorize></reddit-api-auth>
+					<span>Retrieved access token: {{info.access_token}}</span>
+				</template>
+			</template>
+		</demo-snippet>
+
+		<dom-module id="user-auth-demo">
+			<template>
+				<input type="button" value="Trigger user auth" on-tap="_activateUserAuth">
+				<reddit-api-auth id="authenticate"
+					 client-id="5StAVdoKcV-gug"
+	  				 redirect-uri="https://emanguy.github.io/reddit-api-elements/auth.html"
+					 scope='[ "mysubreddits" ]'
+					 auth-info="{{info}}"></reddit-api-auth>
+				 <br>
+				 <span>Retrieved access token: {{info.access_token}}</span>
+				 <br>
+				 <span hidden="{{!authErrorOccurred}}">Authentication error occurred. Error: {{errorMessage}}</span>
+			</template>
+
+			<script>
+				Polymer({
+					is: "user-auth-demo",
+
+					properties: 
+					{
+						info:
+						{
+							type: Object,
+							value: function() { return { access_token: "Log in first." } }
+						},
+						
+						authErrorOccurred:
+						{
+							type: Boolean,
+							value: false
+						},
+
+						errorMessage:
+						{
+							type: String,
+							value: ""
+						}	
+					},
+
+					listeners:
+					{
+						"auth-error": "_triggerAuthError"
+					},
+
+					_activateUserAuth: function() 
+					{
+						this.$.authenticate.authenticateWithUser();
+					},
+
+					_triggerAuthError: function(e)
+					{
+						this.authErrorOccurred = true;
+						this.errorMessage = e.detail.reason;
+					}
+				});
+			</script>
+		</dom-module>
+
+		<user-auth-demo></user-auth-demo>
+
+	</div>
+
+  </body>
+</html>

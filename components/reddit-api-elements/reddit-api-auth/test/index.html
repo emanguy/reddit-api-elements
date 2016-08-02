@@ -1,0 +1,59 @@
+<!doctype html>
+
+<html>
+  <head>
+    <title>reddit-api test</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+    <script src="../../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../../web-component-tester/browser.js"></script>
+
+    <link rel="import" href="../reddit-api-auth.html">
+  </head>
+  <body>
+
+    <test-fixture id="basic">
+      <template>
+        <reddit-api-auth></reddit-api-auth>
+      </template>
+    </test-fixture>
+
+    <script>
+      suite('reddit-api-auth', function() {
+
+        test('instantiating the element works', function() {
+          let element = fixture('basic');
+          assert.equal(element.is, 'reddit-api-auth');
+        });
+
+		test('can anonymously log in', function(done) {
+			let element = fixture('basic');
+			element.clientId = "5StAVdoKcV-gug";
+
+			element.anonymousLogin().then(function(result) {
+				expect(result).to.be.an("object");
+				expect(result).to.contain.all.keys(["status", "authInfo"]);
+				expect(result.status).to.be.a("number").and.equal(200);
+				expect(result.authInfo).to.be.an("object");
+
+				expect(element.authInfo).to.be.an("object");
+				expect(element.authInfo).to.not.have.property("error");
+				expect(element.authInfo).to.contain.all.keys(["access_token", "token_type", "expires_in", "scope"]);
+				expect(element.authInfo.access_token).to.be.a("string");
+				expect(element.authInfo.token_type).to.be.a("string").and.equal("bearer");
+				expect(element.authInfo.expires_in).to.be.a("number");
+				expect(element.authInfo.scope).to.be.a("string").and.equal("*");
+				done();
+			},
+			function(result) {
+				expect(result).to.be.an("object").and.contain.all.keys(["status", "reason"]);
+				throw result;
+				done();
+			}).catch(done);
+		});
+		
+
+      });
+    </script>
+  </body>
+</html>
