@@ -82,11 +82,11 @@ Polymer({
 		var promise = new Promise((resolve, reject) =>
 				{
 					// Generate new async HTTP request
-					var url = "https://www.reddit.com/api/v1/authorize?client_id=" + encodeURIComponent(instance.clientId) + 
+					var url = "https://www.reddit.com/api/v1/authorize.compact?client_id=" + encodeURIComponent(instance.clientId) + 
 									"&response_type=token&state=" + encodeURIComponent(state) + "&redirect_uri=" + encodeURIComponent(instance.redirectUri) +
 									"&scope=" + instance._spaceSeparatedScopes();
 					
-					var theWindow = window.open(url);
+					var theWindow = window.open(url, "Authorize applicaton", "width=500,height=500");
 
 					// Check every half second to see if window is closed
 					var interval = window.setInterval(() =>
