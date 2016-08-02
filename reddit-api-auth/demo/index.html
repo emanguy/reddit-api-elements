@@ -29,6 +29,60 @@
 				</template>
 			</template>
 		</demo-snippet>
+
+		<dom-module id="user-auth-demo">
+			<template>
+				<input type="button" value="Trigger user auth" on-tap="_activateUserAuth">
+				<reddit-api-auth id="authenticate"
+					 client-id="5StAVdoKcV-gug"
+	  				 redirect-uri="https://midnight-narwhal.firebaseapp.com/auth.html"
+					 scope='[ "mysubreddits" ]'
+					 auth-info="{{info}}"></reddit-api-auth>
+				 <br>
+				 <span>Retrieved access token: {{info.access_token}}</span>
+				 <br>
+				 <span hidden="{{!authErrorOccurred}}">Authentication error occurred.</span>
+			</template>
+
+			<script>
+				Polymer({
+					is: "user-auth-demo",
+
+					properties: 
+					{
+						info:
+						{
+							type: Object,
+							value: function() { return { access_token: "Log in first." } }
+						},
+						
+						authErrorOccurred:
+						{
+							type: Boolean,
+							value: false
+						}	
+					},
+
+					listeners:
+					{
+						"auth-error": "_triggerAuthError"
+					},
+
+					_activateUserAuth: function() 
+					{
+						this.$.authenticate.authenticateWithUser();
+					},
+
+					_triggerAuthError: function()
+					{
+						this.authErrorOccurred = true;
+					}
+				});
+			</script>
+		</dom-module>
+
+		<user-auth-demo></user-auth-demo>
+
 	</div>
 
   </body>

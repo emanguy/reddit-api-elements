@@ -72,67 +72,56 @@ Polymer({
 		var promise = new Promise((resolve, reject) =>
 				{
 					// Generate new async HTTP request
-					var url = "https://www.reddit.com/api/v1/authorize?client_id=" + encodeURIComponent(clientId) + 
-									"&response_type=token&state=" + encodeURIComponent(state) + "redirect_uri=" + encodeURIComponent(this.redirectUri) +
-									"&scope=" + this._spaceSeparatedScopes();
-					var xhr = new XMLHttpRequest();
+					var url = "https://www.reddit.com/api/v1/authorize?client_id=" + encodeURIComponent(instance.clientId) + 
+									"&response_type=token&state=" + encodeURIComponent(state) + "&redirect_uri=" + encodeURIComponent(instance.redirectUri) +
+									"&scope=" + instance._spaceSeparatedScopes();
 					
-					// Add event listener for XHR loading
-					xhr.onreadystatechange = () =>
-					{
-						// Run this code when we fully load the webpage
-						if (xhr.readyState === 4)
+					var theWindow = window.open(url);
+
+					// Check every half second to see if window is closed
+					var interval = window.setInterval(() =>
 						{
-							// Attempt to authenticate in new window if we can reach the endpoint
-							if (xhr.status === 200)
+							// When the window is closed attempt to grab the auth data as JSON
+							if ((theWindow.location.origin + theWindow.location.pathname) === instance.redirectUri)
 							{
-								var theWindow = window.open(url);
+								window.clearInterval(interval);
+								var hash = theWindow.location.hash;
+								theWindow.close();
+								console.log(theWindow.location);
 
-								// Check every half second to see if window is closed
-								var interval = window.setInterval(() =>
-										{
-											// When the window is closed attempt to grab the auth data as JSON
-											if (theWindow.closed)
-											{
-												window.clearInterval(interval);
-												var hash = theWindow.location.hash;
+								// If no hash then something went wrong
+								if (!hash || hash === "")
+								{
+									instance.fire("auth-error", {status: 204, reason: "Empty response"});
+									reject({status: 204, reason: "Empty response"});
+									return;
+								}
 
-												// If no hash then something went wrong
-												if (hash === "")
-												{
-													instance.fire("authError", {status: 204, reason: "Empty response"});
-													reject({status: 204, reason: "Empty response"});
-												}
+								// If there is a hash form-decode it
+								hash = hash.substring(1, hash.length);
+								instance._parser.paramsString = hash;
+								
+								// Resolve if we sent this request, otherwise reject with error
+								if (state === instance._parser.paramsString.state)
+								{
+									var responseJSON = instance._parser.paramsObject;
+									var keys = Object.keys(responseJSON);
+									instance._setAuthInfo(responseJSON);
 
-												// If there is a hash form-decode it
-												hash = hash.substring(1, hash.length);
-												instance._parser.paramsString = hash;
-												
-												// Resolve if we sent this request, otherwise reject with error
-												if (state === instance._parser.paramsString.state)
-												{
-													instance._setAuthInfo(instance._parser.paramsObject);
-													resolve({status: 200, authInfo: instance._parser.paramsObject});
-												}
-												else
-												{
-													instance.fire("authError", {status: 404, reason: "Got response from a request you didn't send"});
-													reject({status: 404, reason: "Got response from a request you didn't send"});
-												}
-											}
-										}, 500);
+									for (i in keys)
+									{
+										instance.notifyPath("authInfo." + keys[i], responseJSON[keys[i]]);
+									}
+
+									resolve({status: 200, authInfo: responseJSON});
+								}
+								else
+								{
+									instance.fire("auth-error", {status: 404, reason: "Got response from a request you didn't send"});
+									reject({status: 404, reason: "Got response from a request you didn't send"});
+								}
 							}
-							else // Reject and fire error if we can't reach auth endpoint or we 403 based on bad client-id/redirect-uri
-							{
-								instance.fire("authError", {status: xhr.status, reason: "Bad client-id or redirect-uri"});
-								reject({status: xhr.status, reason: "Bad client-id or redirect-uri"});
-							}
-						}
-					}	
-
-					// Launch the request
-					xhr.open("GET", url, true);
-					xhr.send();
+						}, 500);
 				});
 
 		return promise;
@@ -164,11 +153,13 @@ Polymer({
 						if (xhr.readyState == 4)
 						{
 							// Check the status, reject if not 200 OK 
-							if (xhr.status == 200) { var returnedJSON = JSON.parse(xhr.responseText);
+							if (xhr.status == 200) 
+							{ 
+								var returnedJSON = JSON.parse(xhr.responseText);
 
 								if (returnedJSON.error)
 								{
-									instance.fire("authError", {status: 200, reason: returnedJSON.error});
+									instance.fire("auth-error", {status: 200, reason: returnedJSON.error});
 									reject({status: 200, reason: returnedJSON.error});
 									return;
 								}
@@ -185,7 +176,7 @@ Polymer({
 							}
 							else
 							{
-								instance.fire("authError", {status: xhr.status, reason: "Internal reddit-api-auth element error"});
+								instance.fire("auth-error", {status: xhr.status, reason: "Internal reddit-api-auth element error"});
 								reject({status: xhr.status, reason: "Internal reddit-api-auth element error"});
 							}
 						}
