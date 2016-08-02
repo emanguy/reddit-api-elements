@@ -61,6 +61,16 @@ Polymer({
 		}
 	},
 
+	/**
+	  * Opens a new window and attempts to obtain an auth token through OAuth against Reddit. The element will
+	  * listen for when the opened window visits the redirect URI and will auto-close it and capture the token
+	  * from the opened window. Returns a promise with the reddit response status and a copy of the authInfo property
+	  * if no auth errors occurred, otherwise gives status and a string describing why auth failed on reject.
+	  *
+	  * On successful authentication, this will update the authInfo property.
+	  *
+	  * @return {promise} {status: number, authInfo: object} on resolve, {status: number, reason: string} on reject
+	  */
 	authenticateWithUser: function()
 	{
 		// Create necessary vars
@@ -102,7 +112,7 @@ Polymer({
 								instance._parser.paramsString = hash;
 								
 								// Resolve if we sent this request, otherwise reject with error
-								if (state === instance._parser.paramsString.state)
+								if (state === instance._parser.paramsObject.state)
 								{
 									var responseJSON = instance._parser.paramsObject;
 									var keys = Object.keys(responseJSON);
@@ -130,6 +140,8 @@ Polymer({
 	/**
 	  * Log in anonymously. Promise resolves and gives Reddit response status as well as an authInfo copy
 	  * while a reject will give Reddit response status and a reason for auth failure.
+	  *
+	  * On successful auth, this will update the authInfo property.
 	  *
 	  * @return {promise} {status: number, authInfo: object} on resolve, {status: number, reason: string} on reject
 	  */
